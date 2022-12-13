@@ -255,11 +255,10 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 					sendNSToggle = true;
 				}
 			}
-
 			send(cl_sock, "MO", 3, 0);
 			auto mIter = gameFrame.m_curStage->m_monsterList.begin();
 			auto mIterEnd = gameFrame.m_curStage->m_monsterList.end();
-			for (auto iIter = mIter; mIter != mIterEnd; ++mIter) {
+			for (auto iIter = mIter; iIter != mIterEnd; ++iIter) {
 				tmpstr[0] = '\0';
 
 				POINT pt = (*iIter)->GetMonsterPt();
@@ -280,7 +279,6 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 				}
 				send(cl_sock, coordbuf, 5, 0);
 			}
-
 			Sleep(6);
 		}
 
@@ -603,7 +601,7 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 		else if (strcmp(recvdata, "MO") == 0) {
 			auto mIter = gameFrame.m_curStage->m_monsterList.begin();
 			auto mIterEnd = gameFrame.m_curStage->m_monsterList.end();
-			for (auto iIter = mIter; mIter != mIterEnd; ++iIter){
+			for (auto iIter = mIter; iIter != mIterEnd; ++iIter){
 				tmpstr[0] = '\0';
 
 				POINT pt;
