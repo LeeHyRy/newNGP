@@ -1,6 +1,29 @@
 #include "Boss.h"
 #include "EffectManager.h"
 
+Boss::Boss()
+{
+	AnimationManager::GetInst()->AddNewAnimation("BossAnimation", L"StoneGolem.png", POINT{ 10, 9 });
+
+	m_animation = AnimationManager::GetInst()->GetAnimation("BossAnimation");
+	m_animation->AddNewClip("default", POINT{ 0, 0 }, 4, 0.25f);
+	m_animation->AddNewClip("ready", POINT{ 0, 1 }, 8, 0.2f);
+	m_animation->AddNewClip("fireArm", POINT{ 0, 2 }, 9, 0.1f);
+	m_animation->AddNewClip("defence", POINT{ 0, 3 }, 8, 0.1f);
+	m_animation->AddNewClip("defencing", POINT{ 6, 3 }, 2, 1.f);
+	m_animation->AddNewClip("attackGround", POINT{ 0, 4 }, 7, 0.2f);
+	m_animation->AddNewClip("chargingLazer", POINT{ 0, 5 }, 7, 3.5f / 7.f);
+	m_animation->AddNewClip("fireLazer", POINT{ 0, 5 }, 1, 2.5f);
+	m_animation->AddNewClip("die", POINT{ 0, 7 }, 14, 0.1f);
+
+	m_curClip = m_animation->GetClip("default");
+
+	SIZE imgSize = m_curClip->GetFrameSize();
+	float sizeScale = m_size.cx / (float)imgSize.cx;
+	m_hitBoxSize = { (LONG)(m_hitBoxSizeOrigin.cx * sizeScale), (LONG)(m_hitBoxSizeOrigin.cy * sizeScale) };
+	m_hitBoxSizeOrigin = m_hitBoxSize;
+}
+
 Boss::Boss(const POINT& pt) {
 	AnimationManager::GetInst()->AddNewAnimation("BossAnimation", L"StoneGolem.png", POINT{ 10, 9 });
 
@@ -50,6 +73,16 @@ POINT Boss::GetPt() const {
 
 SIZE Boss::GetSize() const {
 	return m_size;
+}
+
+int Boss::GetHP() const
+{
+	return m_hp;
+}
+
+void Boss::SetHP(int in)
+{
+	m_hp = in;
 }
 
 void Boss::ResetJumpPower() {

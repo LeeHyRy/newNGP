@@ -2,6 +2,7 @@
 
 #include "framework.h"
 #include "Player.h"
+#include "Boss.h"
 
 class Stage {
 public:
@@ -14,6 +15,7 @@ public:
 	class Player* m_player{ };
 	list<class Player*> m_otherPlayerList{ }; //다른 멀티 플레이어 리스트
 	list<class Monster*> m_monsterList{ };
+	class Boss* m_boss{ };
 
 private:
 	int m_stageNum{ };
@@ -26,7 +28,6 @@ private:
 	list<class Bullet*> m_bulletList{ };
 	vector<class Button*> m_buttonVec{ };
 	class Portal* m_portal{ };
-	class Boss* m_boss{ };
 
 	bool m_playerInPortal{ false };
 

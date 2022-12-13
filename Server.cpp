@@ -102,11 +102,7 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 
 	bool sendNSToggle = false;
 
-
-	auto opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
-	auto opIterEnd = gameFrame.m_curStage->m_otherPlayerList.end();
-	int tmp_num = 0;
-	char coordbuf[11];
+	
 
 	bool beforeReadyStatus[3]; // 이전 레디상태와 비교하여 dlg에 변화가 있으면 재전송하는 변수
 	for (int i{}; i < 3; ++i) {
@@ -187,6 +183,11 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 			Sleep(333);
 		}
 		else {
+			auto opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
+			auto opIterEnd = gameFrame.m_curStage->m_otherPlayerList.end();
+			int tmp_num = 0;
+			char tmpstr[11];
+			char coordbuf[11];
 			// 플레이어 위치 송신
 			for (auto iIter=opIter; iIter != opIterEnd; ++iIter) {
 				// Host의 플레이어 위치 송신
@@ -200,6 +201,7 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 
 					POINT pt = gameFrame.m_curStage->m_player->GetPlayerPt();
 					strcpy(coordbuf, "0000");
+					char tmpbuf[5];
 					_itoa(pt.x, tmpbuf, 10);
 					int lentmp = strlen(tmpbuf);
 					for (int i{}; i < lentmp; ++i) {
@@ -226,6 +228,7 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 
 					POINT pt = (*iIter)->GetPlayerPt();
 					strcpy(coordbuf, "0000");
+					char tmpbuf[5];
 					_itoa(pt.x, tmpbuf, 10);
 					int lentmp = strlen(tmpbuf);
 					for (int i{}; i < lentmp; ++i) {
@@ -276,6 +279,14 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 					coordbuf[(4 - lentmp) + i] = tmpbuf[i];
 				}
 				send(cl_sock, coordbuf, 5, 0);
+			}
+
+			Boss* bstmp = gameFrame.m_curStage->m_boss;
+			if (bstmp) {
+				send(cl_sock, "HP", 3, 0);
+				int tmphp = bstmp->GetHP();
+				_itoa(tmphp, tmpbuf, 10);
+				send(cl_sock, tmpbuf, 6, 0);
 			}
 			Sleep(6);
 		}
@@ -352,7 +363,7 @@ DWORD WINAPI inGameClientResendThread(LPVOID arg)
 			send(ig_sock, "CO", 3, 0);
 			POINT pt = gameFrame.m_curStage->m_player->GetPlayerPt();
 			strcpy(coordbuf, "0000");
-			char tmpbuf[5];
+			char tmpbuf[11];
 			_itoa(pt.x, tmpbuf, 10);
 			int lentmp = strlen(tmpbuf);
 			for (int i{}; i < lentmp; ++i) {
@@ -373,6 +384,14 @@ DWORD WINAPI inGameClientResendThread(LPVOID arg)
 				send(ig_sock, "NS", 3, 0);
 			}
 			bfStage = nowStage;
+
+			Boss* bstmp = gameFrame.m_curStage->m_boss;
+			if (bstmp) {
+				send(ig_sock, "HP", 3, 0);
+				int tmphp = bstmp->GetHP();
+				_itoa(tmphp, tmpbuf, 10);
+				send(ig_sock, tmpbuf, 6, 0);
+			}
 		}
 		Sleep(6);
 	}
@@ -546,6 +565,17 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 			if (gameFrame.m_curStage->GetStageNum() == 1)
 				gameFrame.NextStage();
 		}
+		else if (strcmp(recvdata, "HP") == 0) {
+			recv(my_sock, recvcode, 6, MSG_WAITALL);
+			Boss* bstmp = gameFrame.m_curStage->m_boss;
+			if (bstmp) {
+				int serverbossHp = atoi(recvcode);
+				int mybossHp = bstmp->GetHP();
+				if (mybossHp > 0 && mybossHp > serverbossHp) {
+					bstmp->SetHP(serverbossHp);
+				}
+			}
+		}
 	}
 	// Client인 경우의 수신정보 처리
 	else {
@@ -613,6 +643,17 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 					if (*iIter) {
 						(*iIter)->SetPt(pt);
 					}
+				}
+			}
+		}
+		else if (strcmp(recvdata, "HP") == 0) {
+			recv(my_sock, recvcode, 6, MSG_WAITALL);
+			Boss* bstmp = gameFrame.m_curStage->m_boss;
+			if (bstmp) {
+				int serverbossHp = atoi(recvcode);
+				int mybossHp = bstmp->GetHP();
+				if (mybossHp > 0 && mybossHp > serverbossHp) {
+					bstmp->SetHP(serverbossHp);
 				}
 			}
 		}
