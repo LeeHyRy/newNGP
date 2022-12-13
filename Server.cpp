@@ -100,6 +100,8 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 	char tmpstr[2];
 	int retval = 0;
 
+	bool sendNSToggle = false;
+
 
 	bool beforeReadyStatus[3]; // 이전 레디상태와 비교하여 dlg에 변화가 있으면 재전송하는 변수
 	for (int i{}; i < 3; ++i) {
@@ -243,6 +245,16 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 				}
 				++tmp_num;
 			}
+
+			// 스테이지 이동
+			if (!sendNSToggle) {
+				int nowStage = gameFrame.m_curStage->GetStageNum();
+				if (nowStage == 2) {
+
+					send(cl_sock, "NS", 3, 0);
+					sendNSToggle = true;
+				}
+			}
 			/*
 			send(cl_sock, "MO", 3, 0);
 			auto mIter = gameFrame.m_curStage->m_monsterList.begin();
@@ -338,6 +350,8 @@ DWORD WINAPI inGameClientResendThread(LPVOID arg)
 	SOCKET ig_sock = ig_client.GetMySock();
 	char recvcode[30];
 
+	int bfStage = gameFrame.m_curStage->GetStageNum();
+
 	int retval;
 	while (1) {
 		if (gameFrame.m_curStage->m_player) {
@@ -363,6 +377,11 @@ DWORD WINAPI inGameClientResendThread(LPVOID arg)
 				coordbuf[(4 - lentmp) + i] = tmpbuf[i];
 			}
 			send(ig_sock, coordbuf, 5, 0);
+
+			int nowStage = gameFrame.m_curStage->GetStageNum();
+			if (nowStage == 2 && bfStage == 1) {
+				send(ig_sock, "NS", 3, 0);
+			}
 		}
 		Sleep(6);
 	}
@@ -532,6 +551,9 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 				}
 			}
 		}
+		else if (strcmp(recvdata, "NS") == 0) { // 다음 스테이지 이동 수신의 경우
+			gameFrame.NextStage();
+		}
 	}
 	// Client인 경우의 수신정보 처리
 	else {
@@ -578,6 +600,9 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 			EndDialog(DlgHandle, 0);
 			HANDLE hnd = CreateThread(NULL, 0, inGameClientResendThread, (LPVOID)this, 0, NULL);
 			CloseHandle(hnd);
+		}
+		else if (strcmp(recvdata, "NS") == 0) {
+			gameFrame.NextStage();
 		}
 		else if (strcmp(recvdata, "MO") == 0) {
 			/*
