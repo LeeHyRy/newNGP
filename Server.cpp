@@ -441,6 +441,10 @@ int WAITING_ROOM::CONNECT_ROOM(char* serverip, char* name, char* serverport)
 	if (strcmp(tmpbuf, "X") == 0) {
 		return -1;
 	}
+	else {
+		recv(my_sock, tmpbuf, 2, MSG_WAITALL);
+		my_num = atoi(tmpbuf);
+	}
 
 	HANDLE hnd = CreateThread(NULL, 0, roomClientThread, (LPVOID)this, 0, NULL);
 	CloseHandle(hnd);
@@ -482,6 +486,9 @@ bool WAITING_ROOM::checkJoin(char* name)
 	}
 
 	send(my_sock, "O", 2, 0); // 정상적으로 접속하였다는 정보 클라이언트 측으로 전송
+	char tmpbuf[2];
+	_itoa(my_num, tmpbuf, 10);
+	send(my_sock, tmpbuf, 2, 0);
 	HANDLE hnd = CreateThread(NULL, 0, roomDataResendThread, (LPVOID)this, 0, NULL);
 	CloseHandle(hnd);
 	return true;
