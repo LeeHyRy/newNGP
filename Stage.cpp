@@ -730,7 +730,11 @@ bool Stage::Load(const string& fileName) {
 
 				for (int i{}; i < 3; ++i) {
 					Player* OtherPlayer1 = new Player(false);
-					OtherPlayer1->SetPt(m_player->GetPlayerPt());
+					POINT pttmp;
+					pttmp.x = 0;
+					pttmp.y = 0;
+					OtherPlayer1->SetPt(pttmp);
+					OtherPlayer1->SetGravitor(false);
 					m_otherPlayerList.push_back(OtherPlayer1);
 				}
 			}

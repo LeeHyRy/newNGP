@@ -37,6 +37,7 @@ private:
 	float m_timeScale{ 1.5f };
 	float m_gravityTime{ 0.f };
 	bool m_onGround{ false };
+	bool m_gravitor{ true };
 
 	Effect* m_skillEffect{ };
 
@@ -101,6 +102,8 @@ public:
 	int GetHP() const;
 
 	RECT GetPrevRC() const;
+
+	void SetGravitor(bool in);
 
 	void ResetJumpPower();
 	void SetPower(int power, bool timeClear = false);

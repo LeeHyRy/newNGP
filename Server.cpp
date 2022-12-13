@@ -102,7 +102,10 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 
 	bool sendNSToggle = false;
 
-	
+	list<Player*>::iterator opIter;
+	list<Player*>::iterator opIterEnd;
+	list<Monster*>::iterator mIter;
+	list<Monster*>::iterator mIterEnd;
 
 	bool beforeReadyStatus[3]; // 이전 레디상태와 비교하여 dlg에 변화가 있으면 재전송하는 변수
 	for (int i{}; i < 3; ++i) {
@@ -183,8 +186,8 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 			Sleep(333);
 		}
 		else {
-			auto opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
-			auto opIterEnd = gameFrame.m_curStage->m_otherPlayerList.end();
+			opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
+			opIterEnd = gameFrame.m_curStage->m_otherPlayerList.end();
 			int tmp_num = 0;
 			char tmpstr[11];
 			char coordbuf[11];
@@ -257,8 +260,8 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 				}
 			}
 			send(cl_sock, "MO", 3, 0);
-			auto mIter = gameFrame.m_curStage->m_monsterList.begin();
-			auto mIterEnd = gameFrame.m_curStage->m_monsterList.end();
+			mIter = gameFrame.m_curStage->m_monsterList.begin();
+			mIterEnd = gameFrame.m_curStage->m_monsterList.end();
 			for (auto iIter = mIter; iIter != mIterEnd; ++iIter) {
 				tmpstr[0] = '\0';
 

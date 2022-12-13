@@ -119,6 +119,11 @@ RECT Player::GetPrevRC() const {
 	return rc;
 }
 
+void Player::SetGravitor(bool in)
+{
+	m_gravitor = in;
+}
+
 void Player::ResetJumpPower() {
 	m_power = static_cast<int>(m_jumpPowerOrigin);
 	m_gravityTime = 0.f;
@@ -641,9 +646,13 @@ void Player::Gravity(float deltaTime) {
 	if (m_onGround and !m_jumped) {
 		return;
 	}
+	int my_gravity = gravity;
+	if (!m_gravitor) {
+		my_gravity = 0.0f;
+	}
 	
 	m_gravityTime += deltaTime * m_timeScale;
-	m_power -= static_cast<int>(gravity * m_gravityTime * m_gravityTime * m_timeScale);
+	m_power -= static_cast<int>(my_gravity * m_gravityTime * m_gravityTime * m_timeScale);
 	if (m_power <= m_limitPower) {
 		m_power = static_cast<int>(m_limitPower);
 	}
