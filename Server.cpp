@@ -476,12 +476,14 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 			recv(my_sock, recvcode, 5, MSG_WAITALL);
 			pt.y = atoi(recvcode);
 
-			auto opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
-			for (int i{}; i < my_num; ++i) {
-				++opIter;
-			}
-			if ((*opIter)) {
-				(*opIter)->SetPt(pt);
+			if (gameFrame.m_curStage->GetStageNum() != 0) {
+				auto opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
+				for (int i{}; i < my_num; ++i) {
+					++opIter;
+				}
+				if ((*opIter)) {
+					(*opIter)->SetPt(pt);
+				}
 			}
 		}
 	}
@@ -504,6 +506,7 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 			pressStart();
 		}
 		else if (strcmp(recvdata, "CO") == 0) {
+
 			recv(my_sock, recvcode, 2, MSG_WAITALL);
 			int editnum = atoi(recvcode);
 
@@ -514,12 +517,14 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 			recv(my_sock, recvcode, 5, MSG_WAITALL);
 			pt.y = atoi(recvcode);
 
-			auto opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
-			for (int i{}; i < editnum; ++i) {
-				++opIter;
-			}
-			if ((*opIter)) {
-				(*opIter)->SetPt(pt);
+			if (gameFrame.m_curStage->GetStageNum() != 0) {
+				auto opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
+				for (int i{}; i < editnum; ++i) {
+					++opIter;
+				}
+				if ((*opIter)) {
+					(*opIter)->SetPt(pt);
+				}
 			}
 		}
 		else if (strcmp(recvdata, "CR") == 0) {
