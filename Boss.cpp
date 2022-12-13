@@ -356,6 +356,7 @@ void Boss::Update(float deltaTime, const POINT& playerPt) {
 			AttackLazer(deltaTime);
 			break;
 		}
+		m_ai.Update(deltaTime);
 	}
 
 	m_onGround = false;

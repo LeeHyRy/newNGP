@@ -32,13 +32,14 @@ public:
 		switch (GetRandInt(0, 4)) {
 		case 0:
 			return BossState::ST_DEFAULT;
-
+			break;
 		case 1:
 		case 2:
 		case 3:
 		case 4:
 			m_patternNum = GetRandInt(0, 1);
 			return BossState::ST_PATTERN;
+			break;
 
 		}
 	}
@@ -75,7 +76,7 @@ private:
 	POINT m_prevPt{ };
 	SIZE m_size{ 800, 800 };
 
-	int m_hp{ 1000 };
+	int m_hp{ 100 }; // Testing
 
 	BossAI m_ai{ };
 	BossState m_state{ BossState::ST_DEFAULT };

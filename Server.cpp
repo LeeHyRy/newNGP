@@ -255,15 +255,11 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 					sendNSToggle = true;
 				}
 			}
-			/*
+
 			send(cl_sock, "MO", 3, 0);
 			auto mIter = gameFrame.m_curStage->m_monsterList.begin();
 			auto mIterEnd = gameFrame.m_curStage->m_monsterList.end();
-			int mCount = gameFrame.m_curStage->m_monsterList.size();
-			_itoa(mCount, tmpbuf, 10);
-			send(cl_sock, tmpbuf, 4, 0); // 몬스터수 전송
-			for (auto iIter = mIter; mIter != mIterEnd; ++mIter)
-			{
+			for (auto iIter = mIter; mIter != mIterEnd; ++mIter) {
 				tmpstr[0] = '\0';
 
 				POINT pt = (*iIter)->GetMonsterPt();
@@ -284,8 +280,6 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 				}
 				send(cl_sock, coordbuf, 5, 0);
 			}
-
-			*/
 
 			Sleep(6);
 		}
@@ -382,6 +376,7 @@ DWORD WINAPI inGameClientResendThread(LPVOID arg)
 			if (nowStage == 2 && bfStage == 1) {
 				send(ig_sock, "NS", 3, 0);
 			}
+			bfStage = nowStage;
 		}
 		Sleep(6);
 	}
@@ -552,7 +547,8 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 			}
 		}
 		else if (strcmp(recvdata, "NS") == 0) { // 다음 스테이지 이동 수신의 경우
-			gameFrame.NextStage();
+			if (gameFrame.m_curStage->GetStageNum() == 1)
+				gameFrame.NextStage();
 		}
 	}
 	// Client인 경우의 수신정보 처리
@@ -596,21 +592,18 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 			}
 		}
 		else if (strcmp(recvdata, "CR") == 0) {
-
 			EndDialog(DlgHandle, 0);
 			HANDLE hnd = CreateThread(NULL, 0, inGameClientResendThread, (LPVOID)this, 0, NULL);
 			CloseHandle(hnd);
 		}
 		else if (strcmp(recvdata, "NS") == 0) {
-			gameFrame.NextStage();
+			if (gameFrame.m_curStage->GetStageNum() == 1)
+				gameFrame.NextStage();
 		}
 		else if (strcmp(recvdata, "MO") == 0) {
-			/*
-			recv(my_sock, recvcode, 4, MSG_WAITALL); // 몬스터 수
-			int mCount = atoi(recvcode);
 			auto mIter = gameFrame.m_curStage->m_monsterList.begin();
-			auto mIterEnd = gameFrame.m_curStage->m_monsterList.begin();
-			for (int i{}; i < mCount; ++i){
+			auto mIterEnd = gameFrame.m_curStage->m_monsterList.end();
+			for (auto iIter = mIter; mIter != mIterEnd; ++iIter){
 				tmpstr[0] = '\0';
 
 				POINT pt;
@@ -621,18 +614,11 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 				pt.y = atoi(recvcode);
 
 				if (gameFrame.m_curStage->GetStageNum() != 0) {
-					if (*mIter) {
-						(*mIter)->SetPt(pt);
-					}
-					if (mIter != mIterEnd) {
-						++mIter;
-					}
-					else {
-						break;
+					if (*iIter) {
+						(*iIter)->SetPt(pt);
 					}
 				}
 			}
-			*/
 		}
 	}
 
