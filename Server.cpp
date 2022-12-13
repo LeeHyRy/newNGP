@@ -155,6 +155,7 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 			if (!checkWrongAccess && strcmp(tmpbuf, "Starting...") == 0) {
 				// 시작 처리
 				send(cl_sock, (char*)"CR", 3, 0);
+				wr_server.SetIsIngame(true);
 				SetDlgItemTextA(hDlg, IDC_P1READY + cl_num, "Start!");
 			}
 
@@ -174,7 +175,6 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 				}
 			}
 			if (goStart) {
-				wr_server.SetIsIngame(true);
 				EndDialog(hDlg, 0);
 			}
 			Sleep(333);
@@ -185,7 +185,9 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 			int tmp_num = 0;
 			char tmpstr[11];
 			char coordbuf[11];
+			// 플레이어 위치 송신
 			for (auto iIter=opIter; iIter != opIterEnd; ++iIter) {
+				// Host의 플레이어 위치 송신
 				if (tmp_num == cl_num && gameFrame.m_curStage->m_player) {
 					tmpstr[0] = '\0';
 
@@ -212,10 +214,15 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 					}
 					send(cl_sock, coordbuf, 5, 0);
 				}
+				// 클라이언트의 플레이어 위치 송신
 				else if ((*iIter)) {
 					tmpstr[0] = '\0';
 
 					send(cl_sock, "CO", 3, 0);
+
+					_itoa(tmp_num, tmpstr, 10);
+					send(cl_sock, tmpstr, 2, 0);
+
 					POINT pt = (*iIter)->GetPlayerPt();
 					strcpy(coordbuf, "0000");
 					char tmpbuf[5];
@@ -236,6 +243,38 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 				}
 				++tmp_num;
 			}
+			/*
+			send(cl_sock, "MO", 3, 0);
+			auto mIter = gameFrame.m_curStage->m_monsterList.begin();
+			auto mIterEnd = gameFrame.m_curStage->m_monsterList.end();
+			int mCount = gameFrame.m_curStage->m_monsterList.size();
+			_itoa(mCount, tmpbuf, 10);
+			send(cl_sock, tmpbuf, 4, 0); // 몬스터수 전송
+			for (auto iIter = mIter; mIter != mIterEnd; ++mIter)
+			{
+				tmpstr[0] = '\0';
+
+				POINT pt = (*iIter)->GetMonsterPt();
+				strcpy(coordbuf, "0000");
+				char tmpbuf[5];
+				_itoa(pt.x, tmpbuf, 10);
+				int lentmp = strlen(tmpbuf);
+				for (int i{}; i < lentmp; ++i) {
+					coordbuf[(4 - lentmp) + i] = tmpbuf[i];
+				}
+				send(cl_sock, coordbuf, 5, 0);
+
+				strcpy(coordbuf, "0000");
+				_itoa(pt.y, tmpbuf, 10);
+				lentmp = strlen(tmpbuf);
+				for (int i{}; i < lentmp; ++i) {
+					coordbuf[(4 - lentmp) + i] = tmpbuf[i];
+				}
+				send(cl_sock, coordbuf, 5, 0);
+			}
+
+			*/
+
 			Sleep(6);
 		}
 
@@ -522,7 +561,7 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 				for (int i{}; i < editnum; ++i) {
 					++opIter;
 				}
-				if ((*opIter)) {
+				if (*opIter) {
 					(*opIter)->SetPt(pt);
 				}
 			}
@@ -532,6 +571,36 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 			EndDialog(DlgHandle, 0);
 			HANDLE hnd = CreateThread(NULL, 0, inGameClientResendThread, (LPVOID)this, 0, NULL);
 			CloseHandle(hnd);
+		}
+		else if (strcmp(recvdata, "MO") == 0) {
+			/*
+			recv(my_sock, recvcode, 4, MSG_WAITALL); // 몬스터 수
+			int mCount = atoi(recvcode);
+			auto mIter = gameFrame.m_curStage->m_monsterList.begin();
+			auto mIterEnd = gameFrame.m_curStage->m_monsterList.begin();
+			for (int i{}; i < mCount; ++i){
+				tmpstr[0] = '\0';
+
+				POINT pt;
+				recv(my_sock, recvcode, 5, MSG_WAITALL);
+				pt.x = atoi(recvcode);
+
+				recv(my_sock, recvcode, 5, MSG_WAITALL);
+				pt.y = atoi(recvcode);
+
+				if (gameFrame.m_curStage->GetStageNum() != 0) {
+					if (*mIter) {
+						(*mIter)->SetPt(pt);
+					}
+					if (mIter != mIterEnd) {
+						++mIter;
+					}
+					else {
+						break;
+					}
+				}
+			}
+			*/
 		}
 	}
 
