@@ -155,7 +155,7 @@ void Monster::Attacked(ATTACKINFO& atkInfo, int dir) {
 	}
 
 	m_knockBack = true;
-	m_hp -= atkInfo.attackDamage;
+	//m_hp -= atkInfo.attackDamage;
 	if (m_hp <= 0) {
 		m_spAnimation = false;
 		Die();

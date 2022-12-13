@@ -269,11 +269,9 @@ void Stage::Input(float deltaTime) {
 }
 
 void Stage::Render(HDC mainDC) {
-	if (m_stageNum == 3 or m_stageNum == 4) {
-		if (!m_backBuffer) {
-			m_backBuffer = new CImage{ };
-			m_backBuffer->Load(m_backGroundFileName.c_str());
-		}
+	if (!m_backBuffer) {
+		m_backBuffer = new CImage{ };
+		m_backBuffer->Load(m_backGroundFileName.c_str());
 	}
 
 	list<Barigate*>::iterator bIterEnd = m_barigateList.end();

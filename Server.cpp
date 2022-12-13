@@ -97,11 +97,16 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 	SOCKET cl_sock = wr_server.GetMySock();
 	HWND hDlg = wr_server.GetDlgHandle();
 	char tmpbuf[NICKBUFSIZE];
-	char tmpstr[2];
+	char tmpstr[NICKBUFSIZE];
 	int retval = 0;
 
 	bool sendNSToggle = false;
 
+
+	auto opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
+	auto opIterEnd = gameFrame.m_curStage->m_otherPlayerList.end();
+	int tmp_num = 0;
+	char coordbuf[11];
 
 	bool beforeReadyStatus[3]; // 이전 레디상태와 비교하여 dlg에 변화가 있으면 재전송하는 변수
 	for (int i{}; i < 3; ++i) {
@@ -182,11 +187,6 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 			Sleep(333);
 		}
 		else {
-			auto opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
-			auto opIterEnd = gameFrame.m_curStage->m_otherPlayerList.end();
-			int tmp_num = 0;
-			char tmpstr[11];
-			char coordbuf[11];
 			// 플레이어 위치 송신
 			for (auto iIter=opIter; iIter != opIterEnd; ++iIter) {
 				// Host의 플레이어 위치 송신
@@ -200,7 +200,6 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 
 					POINT pt = gameFrame.m_curStage->m_player->GetPlayerPt();
 					strcpy(coordbuf, "0000");
-					char tmpbuf[5];
 					_itoa(pt.x, tmpbuf, 10);
 					int lentmp = strlen(tmpbuf);
 					for (int i{}; i < lentmp; ++i) {
@@ -227,7 +226,6 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 
 					POINT pt = (*iIter)->GetPlayerPt();
 					strcpy(coordbuf, "0000");
-					char tmpbuf[5];
 					_itoa(pt.x, tmpbuf, 10);
 					int lentmp = strlen(tmpbuf);
 					for (int i{}; i < lentmp; ++i) {
