@@ -218,8 +218,9 @@ void Stage::Input(float deltaTime) {
 #ifndef EDIT
 	if (m_stageNum == 3 or m_stageNum == 4) {
 		for (int i = 0; i < MAX_BUFFER; ++i) {
-			if (keyInfo[i].down) {
+			if (keyInfo[VK_SPACE].down) {
 				PostQuitMessage(0);
+				break;
 			}
 		}
 	}
@@ -732,7 +733,7 @@ bool Stage::Load(const string& fileName) {
 					Player* OtherPlayer1 = new Player(false);
 					POINT pttmp;
 					pttmp.x = 0;
-					pttmp.y = 0;
+					pttmp.y = -100;
 					OtherPlayer1->SetPt(pttmp);
 					OtherPlayer1->SetGravitor(false);
 					m_otherPlayerList.push_back(OtherPlayer1);

@@ -76,7 +76,7 @@ private:
 	POINT m_prevPt{ };
 	SIZE m_size{ 800, 800 };
 
-	int m_hp{ 100 }; // Testing
+	int m_hp{ 1000 }; // TEST CASE
 
 	BossAI m_ai{ };
 	BossState m_state{ BossState::ST_DEFAULT };

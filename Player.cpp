@@ -227,7 +227,8 @@ void Player::Render(HDC destDC) {
 	bool rev = m_lookLR == MD_LEFT ? true : false;
 	m_animation->Render(destDC, m_playerSize, GetRenderRC(), m_curClip->GetImgRC(), rev, RGB(255, 255, 255));
 
-	m_hpBar.Render(destDC);
+	if (m_gravitor)
+		m_hpBar.Render(destDC);
 
 }
 

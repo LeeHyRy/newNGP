@@ -51,6 +51,9 @@ DWORD WINAPI roomClientThread(LPVOID arg)
 		}
 	}
 
+	if (gameFrame.m_curStage->GetStageNum() != 3) {
+		gameFrame.SetStage(3);
+	}
 	// 서버와의 연결 종료와 처리
 	for (int i{}; i < 4; ++i)
 		SetDlgItemTextA(hDlg, IDC_HOSTNAME + i, ""); // IDC_P1NAME + n = IDC_P(n+1)NAME
@@ -83,6 +86,9 @@ DWORD WINAPI roomDataProcessingThread(LPVOID arg)
 		}
 	}
 
+	if (gameFrame.m_curStage->GetStageNum() != 3) {
+		gameFrame.SetStage(3);
+	}
 	// 클라이언트 cl_num과의 연결 종료와 처리
 	SetDlgItemTextA(hDlg, IDC_P1NAME + cl_num, ""); // IDC_P1NAME + n = IDC_P(n+1)NAME
 	closesocket(cl_sock);
@@ -101,6 +107,7 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 	int retval = 0;
 
 	bool sendNSToggle = false;
+	bool sendDIToggle = false;
 
 	list<Player*>::iterator opIter;
 	list<Player*>::iterator opIterEnd;
@@ -113,9 +120,7 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 		beforeReadyStatus[i] = (strcmp(tmpbuf, "") == 0) ? false : true;
 	}
 	
-	// Host Nickname
-	GetDlgItemTextA(hDlg, IDC_EDITNICKNAME, tmpbuf, NICKBUFSIZE);
-	send(cl_sock, tmpbuf, NICKBUFSIZE, 0);
+
 
 	while (1) {
 		// 재분배
@@ -251,14 +256,21 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 			}
 
 			// 스테이지 이동
+			int nowStage = gameFrame.m_curStage->GetStageNum();
 			if (!sendNSToggle) {
-				int nowStage = gameFrame.m_curStage->GetStageNum();
 				if (nowStage == 2) {
 
 					send(cl_sock, "NS", 3, 0);
 					sendNSToggle = true;
 				}
 			}
+			if (!sendDIToggle) {
+				if (nowStage == 3) {
+					send(cl_sock, "DI", 3, 0);
+					sendDIToggle = true;
+				}
+			}
+
 			send(cl_sock, "MO", 3, 0);
 			mIter = gameFrame.m_curStage->m_monsterList.begin();
 			mIterEnd = gameFrame.m_curStage->m_monsterList.end();
@@ -291,7 +303,7 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 				_itoa(tmphp, tmpbuf, 10);
 				send(cl_sock, tmpbuf, 6, 0);
 			}
-			Sleep(6);
+			Sleep(5);
 		}
 
 		if (retval == SOCKET_ERROR) {
@@ -299,51 +311,6 @@ DWORD WINAPI roomDataResendThread(LPVOID arg)
 		}
 	}
 
-	return 0;
-}
-
-DWORD WINAPI inGameServerThread(LPVOID arg)
-{
-	INGAME ig_server = *(INGAME*)arg;
-	ig_server.SetIsHost(true);
-	SOCKET cl_sock = ig_server.GetMySock();
-	char recvco[30];
-	memset(recvco, 1, 30);
-	int retval;
-	//gameFrame.m_curStage->m_player->GetPlayerPt();
-	auto opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
-	send(cl_sock, "ST", 3, 0);
-
-	while (1) {
-		retval = recv(cl_sock, recvco, 3, MSG_WAITALL);
-
-		// 경우에 따라 상호작용 종료
-		if (ig_server.stringAnalysis(*opIter, recvco) == -1 || retval <= 0)
-			break;
-	}
-
-	return 0;
-}
-
-DWORD WINAPI inGameClientThread(LPVOID arg)
-{
-	INGAME ig_server = *(INGAME*)arg;
-
-	SOCKET sv_sock = ig_server.GetMySock();
-	char recvcode[30];
-
-	int retval;
-
-	while (1) {
-		retval = recv(sv_sock, recvcode, 3, MSG_WAITALL);
-
-		auto opIter = gameFrame.m_curStage->m_otherPlayerList.begin();
-		// 경우에 따라 상호작용 종료
-		if (ig_server.stringAnalysis(*opIter, recvcode) == -1) {
-			break;
-		}
-
-	}
 	return 0;
 }
 
@@ -358,6 +325,10 @@ DWORD WINAPI inGameClientResendThread(LPVOID arg)
 
 	int retval;
 	while (1) {
+		int nowStage = gameFrame.m_curStage->GetStageNum();			
+		if (nowStage == 3 && bfStage != 3) {
+			send(ig_sock, "DI", 3, 0);
+		}
 		if (gameFrame.m_curStage->m_player) {
 			char tmpstr[11];
 			char coordbuf[11];
@@ -386,7 +357,7 @@ DWORD WINAPI inGameClientResendThread(LPVOID arg)
 			if (nowStage == 2 && bfStage == 1) {
 				send(ig_sock, "NS", 3, 0);
 			}
-			bfStage = nowStage;
+
 
 			Boss* bstmp = gameFrame.m_curStage->m_boss;
 			if (bstmp) {
@@ -396,6 +367,7 @@ DWORD WINAPI inGameClientResendThread(LPVOID arg)
 				send(ig_sock, tmpbuf, 6, 0);
 			}
 		}
+		bfStage = nowStage;
 		Sleep(6);
 	}
 
@@ -521,8 +493,6 @@ bool WAITING_ROOM::checkJoin(char* name)
 	char tmpbuf[2];
 	_itoa(my_num, tmpbuf, 10);
 	send(my_sock, tmpbuf, 2, 0);
-	HANDLE hnd = CreateThread(NULL, 0, roomDataResendThread, (LPVOID)this, 0, NULL);
-	CloseHandle(hnd);
 	return true;
 }
 
@@ -536,8 +506,21 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 	if (is_host) {
 		if (strcmp(recvdata, "NN") == 0) { // 닉네임 정보 수신의 경우
 			recv(my_sock, recvcode, NICKBUFSIZE, MSG_WAITALL);
-			if (checkJoin(recvcode))
+			if (checkJoin(recvcode)) {
 				SetDlgItemTextA(DlgHandle, IDC_P1NAME + my_num, recvcode); // IDC_P1NAME + n = IDC_P(n+1)NAME
+				// Host Nickname
+				GetDlgItemTextA(DlgHandle, IDC_EDITNICKNAME, recvcode, NICKBUFSIZE);
+				send(my_sock, recvcode, NICKBUFSIZE, 0);
+				for (int i{}; i < 3; ++i) {
+					send(my_sock, "RS", 3, 0);
+					_itoa(i, tmpstr, 10);
+					send(my_sock, tmpstr, 2, 0);
+					GetDlgItemTextA(DlgHandle, IDC_P1READY + i, recvcode, 10);
+					send(my_sock, recvcode, 10, 0);
+				}
+				HANDLE hnd = CreateThread(NULL, 0, roomDataResendThread, (LPVOID)this, 0, NULL);
+				CloseHandle(hnd);
+			}
 			else 
 				return -1; // 닉네임 중복
 		}
@@ -568,6 +551,11 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 			if (gameFrame.m_curStage->GetStageNum() == 1)
 				gameFrame.NextStage();
 		}
+		else if (strcmp(recvdata, "DI") == 0) { // 사망 수신의 경우
+			if (gameFrame.m_curStage->GetStageNum() != 3) {
+				gameFrame.SetStage(3);
+			}
+		}
 		else if (strcmp(recvdata, "HP") == 0) {
 			recv(my_sock, recvcode, 6, MSG_WAITALL);
 			Boss* bstmp = gameFrame.m_curStage->m_boss;
@@ -594,6 +582,13 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 			char tmpstr[10];
 			GetDlgItemTextA(DlgHandle, IDC_P1READY + editnum, tmpstr, 10);
 			SetDlgItemTextA(DlgHandle, IDC_P1READY + editnum, (strcmp(tmpstr, "") == 0) ? "Ready!" : "");
+		}
+		else if (strcmp(recvdata, "RS") == 0) { // Ready 정보 수신의 경우
+			recv(my_sock, recvcode, 2, MSG_WAITALL);
+			int editnum = atoi(recvcode);
+			char tmpstr[10];
+			recv(my_sock, recvcode, 10, MSG_WAITALL);
+			SetDlgItemTextA(DlgHandle, IDC_P1READY + editnum, recvcode);
 		}
 		else if (strcmp(recvdata, "ST") == 0) {
 			pressStart();
@@ -628,6 +623,11 @@ int WAITING_ROOM::stringAnalysis(char* recvdata)
 		else if (strcmp(recvdata, "NS") == 0) {
 			if (gameFrame.m_curStage->GetStageNum() == 1)
 				gameFrame.NextStage();
+		}
+		else if (strcmp(recvdata, "DI") == 0) { // 사망 수신의 경우
+			if (gameFrame.m_curStage->GetStageNum() != 3) {
+				gameFrame.SetStage(3);
+			}
 		}
 		else if (strcmp(recvdata, "MO") == 0) {
 			auto mIter = gameFrame.m_curStage->m_monsterList.begin();
@@ -767,65 +767,4 @@ bool WAITING_ROOM::GetIsIngame()
 void WAITING_ROOM::SetIsIngame(bool in)
 {
 	is_ingame = in;
-}
-
-
-
-
-INGAME::INGAME()
-{
-}
-
-INGAME::INGAME(SOCKET sock, int num)
-{
-	my_sock = sock;
-	my_num = num;
-}
-
-INGAME::~INGAME()
-{
-}
-
-INGAME::INGAME(const INGAME& ig)
-{
-	my_sock = ig.my_sock;
-	my_num = ig.my_num;
-	is_host = ig.is_host;
-}
-
-int INGAME::GetMyNum()
-{
-	return my_num;
-}
-
-SOCKET INGAME::GetMySock()
-{
-	return my_sock;
-}
-
-bool INGAME::GetIsHost()
-{
-	return is_host;
-}
-
-void INGAME::SetIsHost(bool in)
-{
-	is_host = in;
-}
-
-int INGAME::stringAnalysis(Player* op, char* recvdata)
-{
-	int retval = 0;
-	char recvcode[30];
-	char tmpstr[3];
-
-	// Host인 경우의 수신정보 처리
-	if (is_host) {
-	}
-	// Client인 경우의 수신정보 처리
-	else {
-
-	}
-
-	return 0;
 }
